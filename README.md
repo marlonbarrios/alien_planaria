@@ -59,7 +59,15 @@ The visualization uses several mathematical concepts to create organic movement:
 
 ## Controls
 - **Click** or **Spacebar**: Toggle sound on/off
+- **R key**: Start/Stop recording (saves video with sound)
 - The creature automatically animates and responds to window sizing
+
+## Recording
+- Press 'R' to start recording
+- Press 'R' again to stop and save the recording
+- A red circle indicator appears when recording is active
+- The recording will include both the visual animation and sound
+- Files are saved in WebM format with both video and audio
 
 ## Credits
 

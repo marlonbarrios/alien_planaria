@@ -16,53 +16,101 @@ let breathRate = 0;          // Variable for breathing animation
 let baseStrokeWeight = 2;    // Base thickness of points
 let lfoDepth = 0;            // Low Frequency Oscillator depth for sound modulation
 let soundEnabled = false;     // Sound state toggle
+let recorder;
+let chunks = [];
+let isRecording = false;
+let mediaStream;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   
   // Initialize sound synthesis components
-  osc = new p5.Oscillator('sine');    // Sine wave for smooth underwater tone
-  filter = new p5.LowPass();          // Low-pass filter for muffled effect
-  env = new p5.Envelope();            // Envelope for amplitude control
-  noise = new p5.Noise('pink');       // Pink noise for bubble effects
-  reverb = new p5.Reverb();           // Reverb for underwater atmosphere
+  osc = new p5.Oscillator('sine');
+  filter = new p5.LowPass();
+  env = new p5.Envelope();
+  noise = new p5.Noise('pink');
+  reverb = new p5.Reverb();
   
-  // Configure sound envelope for organic movement
-  env.setADSR(0.05, 0.3, 0.3, 0.4);  // Attack, Decay, Sustain, Release
-  env.setRange(0.9, 0);               // Maximum and minimum amplitude
+  // Configure envelope for louder sound
+  env.setADSR(0.05, 0.3, 0.3, 0.4);
+  env.setRange(0.9, 0);
   
   // Audio routing for underwater effect
   osc.disconnect();
   osc.connect(filter);
-  filter.freq(400);                   // Initial filter cutoff frequency
+  filter.freq(400);
   
   // Initialize oscillator
   osc.start();
   osc.amp(0.8);
   
-  // Configure noise generator
+  // Configure noise for louder bubble sounds
   noise.disconnect();
   noise.connect(filter);
   noise.amp(0);
   
   // Add reverb for space simulation
-  reverb.process(filter, 6, 8);       // Long reverb time for underwater feel
-  filter.res(5);                      // Filter resonance for emphasis
+  reverb.process(filter, 6, 8);
+  filter.res(5);
   
   updateStrokeWeight();
   
   // UI setup
   textAlign(CENTER, CENTER);
   textSize(16);
+  
+  // Setup for recording
+  const canvas = document.querySelector('canvas');
+  mediaStream = canvas.captureStream(30);
+  
+  // Get audio context and connect it to the stream
+  const audioContext = getAudioContext();
+  const dest = audioContext.createMediaStreamDestination();
+  
+  // Connect all audio nodes to the destination
+  osc.connect(filter);
+  filter.connect(dest);
+  noise.connect(filter);
+  reverb.connect(dest);
+  
+  // Add the audio track to the media stream
+  mediaStream.addTrack(dest.stream.getAudioTracks()[0]);
+  
+  recorder = new MediaRecorder(mediaStream, {
+    mimeType: 'video/webm;codecs=h264,opus',
+    videoBitsPerSecond: 8000000,
+    audioBitsPerSecond: 128000
+  });
+  
+  recorder.ondataavailable = e => {
+    if (e.data.size) {
+      chunks.push(e.data);
+    }
+  };
+  
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'alien-planaria-recording.webm';
+    a.click();
+    chunks = [];
+    URL.revokeObjectURL(url);
+  };
 }
 
 function draw() {
-  background(6);  // Nearly black background
+  background(0);
   
   // Update animation parameters
-  t += PI / 60;                       // Time increment for smooth animation
-  breathRate = sin(t/2);              // Breathing cycle
-  lfoDepth = sin(t/3) * 0.7;         // Sound modulation cycle
+  t += PI / 60;
+  breathRate = sin(t/2);
+  lfoDepth = sin(t/3) * 0.7;
+  
+  // Make sure stroke is visible
+  stroke(255, 46);
+  strokeWeight(2);
   
   // Calculate modulation positions
   let x = windowWidth/2 + cos(t) * 100;
@@ -114,11 +162,25 @@ function draw() {
   translate(-windowWidth/2, -windowHeight/2);
   fill(255);
   noStroke();
-  text(`Sound: ${soundEnabled ? 'ON' : 'OFF'} (Press SPACE or click to toggle)`, windowWidth/2, windowHeight - 30);
+  
+  // Sound status text
+  text(`Sound: ${soundEnabled ? 'ON' : 'OFF'} (Press SPACE or click to toggle)`, windowWidth/2, windowHeight - 60);
+  
+  // Recording hint text
+  text(`Press 'R' to start/stop recording video with sound`, windowWidth/2, windowHeight - 30);
   
   // Sound state indicator
   fill(soundEnabled ? '#00ff00' : '#ff0000');
   circle(30, 30, 20);
+  
+  // Recording indicator with label
+  if (isRecording) {
+    fill('#ff0000');
+    noStroke();
+    circle(70, 30, 20);
+    fill(255);
+    text('REC', 100, 35);
+  }
   pop();
 }
 
@@ -193,5 +255,19 @@ function mousePressed() {
 function keyPressed() {
   if (key === ' ') {
     toggleSound();
+  }
+  if (key === 'r' || key === 'R') {
+    if (!isRecording) {
+      // Start recording
+      chunks = [];
+      recorder.start(1000); // 1 second chunks
+      isRecording = true;
+      console.log('Recording started');
+    } else {
+      // Stop recording
+      recorder.stop();
+      isRecording = false;
+      console.log('Recording stopped');
+    }
   }
 }
