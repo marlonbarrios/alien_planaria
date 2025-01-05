@@ -1,12 +1,13 @@
 # Alien Planaria
 
-![Alien Planaria Screenshot](screenshot.png)
+
 
 An interactive audiovisual artwork that simulates an otherworldly creature inspired by planarian flatworms. The creature is rendered using mathematical functions to create organic, fluid movement patterns combined with an underwater soundscape.
 
 **Concept and Programming by Marlon Barrios Solano**
 
-## Description
+## Description![Screenshot 2025-01-05 at 3 12 45 PM](https://github.com/user-attachments/assets/c3feb54a-4ab3-4ede-b2b2-4414a8cded4c)
+
 
 Alien Planaria creates a mesmerizing visualization of a creature composed of thousands of points that move in complex, organic patterns. The movement is generated through a combination of trigonometric functions and parametric equations, creating an effect that mimics the undulating motion of aquatic organisms.
 
@@ -43,6 +44,9 @@ The visualization uses several mathematical concepts to create organic movement:
 - Movement is time-based and continuous
 - Stroke weight adapts to screen size
 - Density of points scales with window size
+- 
+- ![Screenshot 2025-01-05 at 3 12 18 PM](https://github.com/user-attachments/assets/a60ce618-0f1a-4cd6-8154-6ccee8ef2846)
+
 
 ## Running the Project
 
